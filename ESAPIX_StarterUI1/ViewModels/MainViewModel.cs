@@ -1,41 +1,64 @@
 ﻿using ESAPIX.Interfaces;
 using Prism.Mvvm;
-using System.Threading;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using ESAPIX.Common;
+using VMS.TPS.Common.Model.API;
+using Prism.Commands;
+using System.Windows;
+using ESAPIX.Extensions;
+using ESAPIX.Constraints.DVH;
+using System.Collections.ObjectModel;
 
 namespace ESAPX_StarterUI.ViewModels
 {
     public class MainViewModel : BindableBase
     {
-        private string _title = "ESAPIX Starter Application";
+        AppComThread VMS = AppComThread.Instance;
 
-
-        public string Title
+        public MainViewModel()
         {
-            get { return _title; }
-            set { SetProperty(ref _title, value); }
+            EvaluateCommand = new DelegateCommand(() =>
+            {
+                foreach (var pc in Constraints)
+                {
+                    var result = VMS.GetValue(sc =>
+                    {
+                        //Check if we can constrain first
+                        var canConstrain = pc.Constraint.CanConstrain(sc.PlanSetup);
+                        //If not..report why
+                        if (!canConstrain.IsSuccess) { return canConstrain; }
+                        else
+                        {
+                            //Can constrain - so do it
+                            return pc.Constraint.Constrain(sc.PlanSetup);
+                        }
+                    });
+                    //Update UI
+                    pc.Result = result;
+                }
+            });
+
+            CreateConstraints();
         }
 
-        //Store in VM
-        private IESAPIService _es;
-        public MainViewModel(IESAPIService es)
+        private void CreateConstraints()
         {
-            _es = es;
-            //Fire method when plan setup is changed
-            _es.Execute(sac=> sac.PlanSetupChanged += Sac_PlanSetupChanged);
+            Constraints.AddRange(new PlanConstraint[]
+            {
+                new PlanConstraint(ConstraintBuilder.Build("PTV45", "Max[%] <= 110")),
+                new PlanConstraint(ConstraintBuilder.Build("Rectum", "V75Gy[%] <= 15")),
+                new PlanConstraint(ConstraintBuilder.Build("Rectum", "V65Gy[%] <= 35")),
+                new PlanConstraint(ConstraintBuilder.Build("Bladder", "V80Gy[%] <= 15")),
+              //  new PlanConstraint(new CTDateConstraint())
+            });
         }
 
-        private void Sac_PlanSetupChanged(VMS.TPS.Common.Model.API.PlanSetup ps)
-        {
-            //When working with multithread you have to convert types to plan types (non-VMS classes)
-            //Never touch a VMS object on UI thread (or it will crash
-            SelectedPlanId = _es.GetValue(sac => sac.PlanSetup?.Id);
-        }
 
-        private string _selectedPlanId;
-        public string SelectedPlanId
-        {
-            get { return _selectedPlanId; }
-            set { SetProperty(ref _selectedPlanId, value); }
-        }
+        public DelegateCommand EvaluateCommand { get; set; }
+        public ObservableCollection<PlanConstraint> Constraints { get; private set; } = new ObservableCollection<PlanConstraint>();
     }
 }
