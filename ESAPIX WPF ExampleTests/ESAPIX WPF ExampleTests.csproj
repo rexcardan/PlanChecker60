@@ -1,19 +1,12 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<OutputType>WinExe</OutputType>
 		<TargetFramework>net472</TargetFramework>
-		<UseWPF>true</UseWPF>
+		<RootNamespace>ESAPIX_WPF_ExampleTests</RootNamespace>
+		<IsPackable>false</IsPackable>
+		<IsTestProject>true</IsTestProject>
 		<Platforms>x64</Platforms>
-		<ApplicationIcon>Resources\esapix.ico</ApplicationIcon>
 	</PropertyGroup>
-
-	<ItemGroup>
-		<None Remove="Resources\esapix.ico" />
-		<None Remove="Resources\esapix.png" />
-		<None Remove="Resources\esapixSplash.jpg" />
-		<None Remove="Resources\save.png" />
-	</ItemGroup>
 
 	<ItemGroup>
 		<PackageReference Include="ESAPIX_16.1" Version="1.6.7845.354" />
@@ -30,13 +23,14 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<Resource Include="Resources\esapix.ico" />
-		<Resource Include="Resources\esapix.png" />
-		<Resource Include="Resources\save.png" />
+		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.5.0" />
+		<PackageReference Include="MSTest.TestAdapter" Version="2.2.10" />
+		<PackageReference Include="MSTest.TestFramework" Version="2.2.10" />
+		<PackageReference Include="coverlet.collector" Version="3.2.0" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<SplashScreen Include="Resources\esapixSplash.jpg" />
+		<ProjectReference Include="..\ESAPIX_StarterUI1\ESAPIX WPF Example.csproj" />
 	</ItemGroup>
 
 </Project>
